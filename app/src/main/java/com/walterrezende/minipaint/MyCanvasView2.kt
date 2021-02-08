@@ -11,12 +11,12 @@ import kotlin.math.abs
 private const val STROKE_WIDTH = 12f
 
 /**
- * Stores drawing in virtual canvas and bitmap
+ * Stores drawing in drawing path and curPath
  */
-class MyCanvasView(context: Context) : View(context) {
+class MyCanvasView2(context: Context) : View(context) {
 
-    private lateinit var virtualCanvas: Canvas
-    private lateinit var virtualBitmap: Bitmap
+    private val drawing = Path()
+    private val curPath = Path()
 
     private val drawColor =
         ResourcesCompat.getColor(resources, R.color.colorPaint, null)
@@ -30,8 +30,6 @@ class MyCanvasView(context: Context) : View(context) {
         strokeCap = Paint.Cap.ROUND
         strokeWidth = STROKE_WIDTH
     }
-
-    private var path = Path()
 
     private var motionTouchEventX = 0f
     private var motionTouchEventY = 0f
@@ -49,11 +47,6 @@ class MyCanvasView(context: Context) : View(context) {
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        if (::virtualBitmap.isInitialized) virtualBitmap.recycle()
-
-        virtualBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        virtualCanvas = Canvas(virtualBitmap)
-        virtualCanvas.drawColor(backGroundColor)
 
         val inset = 20
         frame = Rect(inset, inset, w - inset, h - inset)
@@ -61,8 +54,12 @@ class MyCanvasView(context: Context) : View(context) {
 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
-        canvas?.drawBitmap(virtualBitmap, 0f, 0f, null)
-        canvas?.drawRect(frame, paint)
+        canvas?.apply {
+            drawColor(backGroundColor)
+            drawPath(drawing, paint)
+            drawPath(curPath, paint)
+            drawRect(frame, paint)
+        }
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
@@ -80,8 +77,8 @@ class MyCanvasView(context: Context) : View(context) {
     }
 
     private fun touchStart() {
-        path.reset()
-        path.moveTo(motionTouchEventX, motionTouchEventY)
+        curPath.reset()
+        curPath.moveTo(motionTouchEventX, motionTouchEventY)
         currentX = motionTouchEventX
         currentY = motionTouchEventY
     }
@@ -90,7 +87,7 @@ class MyCanvasView(context: Context) : View(context) {
         val dx = abs(motionTouchEventX - currentX)
         val dy = abs(motionTouchEventY - currentY)
         if (dx >= touchTolerance || dy >= touchTolerance) {
-            path.quadTo(
+            curPath.quadTo(
                 currentX,
                 currentY,
                 (motionTouchEventX + currentX) / 2,
@@ -98,13 +95,12 @@ class MyCanvasView(context: Context) : View(context) {
             )
             currentX = motionTouchEventX
             currentY = motionTouchEventY
-
-            virtualCanvas.drawPath(path, paint)
         }
         invalidate()
     }
 
     private fun touchUp() {
-        path.reset()
+        drawing.addPath(curPath)
+        curPath.reset()
     }
 }

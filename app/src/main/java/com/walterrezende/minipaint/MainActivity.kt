@@ -7,11 +7,12 @@ import androidx.appcompat.app.AppCompatActivity
 class MainActivity : AppCompatActivity() {
 
     private val myCanvasView by lazy { MyCanvasView(this) }
+    private val myCanvasView2 by lazy { MyCanvasView2(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        myCanvasView.contentDescription = getString(R.string.canvasContentDescription)
-        setContentView(myCanvasView)
+        myCanvasView2.contentDescription = getString(R.string.canvasContentDescription)
+        setContentView(myCanvasView2)
     }
 
     override fun onResume() {
